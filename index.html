@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wheel of Knowledge</title>
+<style>
+  :root{
+    --bg:#fbf6ec; --ink:#2b2418; --card:#ffffff;
+    --early:#c8712d; --early-d:#a2551a;
+    --rev:#2f5f8a; --rev-d:#1f3f5c;
+    --accent:#d64545;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1c1712; --ink:#f1e9d8; --card:#2a2319;
+    }
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Georgia","Iowan Old Style",serif;
+    display:flex; flex-direction:column; align-items:center;
+    padding:24px 14px 50px;
+  }
+  h1{
+    text-align:center; font-size:clamp(1.4rem,4vw,2.1rem);
+    margin:4px 0 2px; letter-spacing:.5px;
+  }
+  .subtitle{ text-align:center; opacity:.75; margin:0 0 18px; font-size:.95rem; max-width:600px;}
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin-bottom:14px;
+    font-size:.85rem;
+  }
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
+  .wheel-wrap{
+    position:relative; width:min(94vw,640px); max-width:640px;
+  }
+  svg{width:100%; height:auto; display:block; overflow:visible;}
+  .wedge{cursor:pointer; transition:transform .15s ease, filter .15s ease; transform-origin:350px 350px;}
+  .wedge:hover{transform:scale(1.035); filter:brightness(1.08);}
+  .wedge.active{transform:scale(1.05); filter:brightness(1.12);}
+  .wedge-label{
+    fill:#fff; font-size:15px; font-weight:700; pointer-events:none;
+    font-family:"Trebuchet MS",sans-serif;
+  }
+  .wedge-icon{ font-size:30px; pointer-events:none; text-anchor:middle; dominant-baseline:middle;}
+  .hub{fill:var(--card); stroke:var(--ink); stroke-width:2;}
+  .hub-text{
+    fill:var(--ink); font-size:14px; font-weight:800; text-anchor:middle;
+    font-family:"Trebuchet MS",sans-serif; pointer-events:none;
+  }
+  .hub-icon{ text-anchor:middle; font-size:34px; pointer-events:none;}
+  .info-panel{
+    margin-top:20px; width:min(94vw,640px); max-width:640px;
+    background:var(--card); border:2px solid var(--ink); border-radius:14px;
+    padding:18px 20px; min-height:120px;
+    box-shadow:4px 4px 0 rgba(0,0,0,.08);
+  }
+  .info-panel h2{margin:0 0 4px; font-size:1.15rem;}
+  .info-panel .kicker{
+    font-size:.75rem; text-transform:uppercase; letter-spacing:1.5px; font-weight:700;
+    opacity:.7; margin-bottom:6px;
+  }
+  .info-panel p{margin:6px 0 0; line-height:1.5; font-size:.98rem;}
+  .info-icon{font-size:2rem; float:right; margin-left:10px;}
+  .hint{ text-align:center; font-size:.8rem; opacity:.6; margin-top:8px;}
+  .reflection{
+    margin-top:38px; width:min(94vw,640px); max-width:640px;
+    background:var(--card); border-radius:14px; padding:20px 22px;
+    border-left:6px solid var(--accent);
+  }
+  .reflection h2{margin-top:0; font-size:1.2rem;}
+  .reflection p{line-height:1.6; font-size:.98rem;}
+  .reflection .q{font-style:italic; opacity:.85; margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<h1>🌀 Wheel of Knowledge</h1>
+<p class="subtitle">How early scientific discovery grew into the revolutions that reshaped human understanding.</p>
+
+<div class="legend">
+  <span><i class="dot" style="background:var(--early)"></i>Cradles of Early Science</span>
+  <span><i class="dot" style="background:var(--rev)"></i>Intellectual Revolutions</span>
+</div>
+
+<div class="wheel-wrap">
+  <svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+<p class="hint">Tap a slice to read about it ↑</p>
+
+<div class="info-panel" id="panel">
+  <div class="kicker">Center of the Wheel</div>
+  <h2>🕯️ Knowledge Changes How Humans Understand the World.</h2>
+  <p>Every civilization and revolution on this wheel added a new way of observing, questioning, and explaining reality — each turn of the wheel expanded what humans could see and know. Tap any slice above to explore it.</p>
+</div>
+
+<div class="reflection">
+  <h2>💭 Short Reflection</h2>
+  <p class="q">Which scientific contribution or intellectual revolution do you think had the greatest impact on how humans understand the world?</p>
+  <p>I think the <strong>Darwinian Revolution</strong> had the greatest impact. Before Darwin, most people believed humans stood apart from and above nature, placed in a fixed and unchanging order. The theory of evolution by natural selection showed instead that humans are part of a long, ongoing process shared with every other living thing, connected by common ancestry rather than separated from it. This idea reshaped biology, medicine, and even how people think about ethics, race, and human identity. It also opened the door for later revolutions — Freud's view of the unconscious mind, for example, built on the idea that humans are natural beings shaped by biological drives rather than purely rational souls. Because it changed not just one field but the whole framework for understanding life and our place within it, I see the Darwinian Revolution as the most far-reaching turning point on this wheel.</p>
+</div>
+
+<script>
+const cx=350, cy=350, rOuter=320, rInner=95, rLabel=230, rIcon=175;
+
+const data = [
+  // Sections 1-4: Cradles of Early Science
+  {group:'early', title:'Maya Civilization', sub:'Mesoamerica',
+   text:'The Maya developed a highly precise calendar system by tracking the cycles of the sun, moon, and Venus, allowing them to predict eclipses and plan agriculture and ceremonies with remarkable accuracy.',
+   icon:'📅', color:'#c8712d'},
+  {group:'early', title:'Aztec Civilization', sub:'Mesoamerica',
+   text:'The Aztecs engineered chinampas — floating raised-bed gardens on lake shallows — applying careful observation of water, soil, and seasons to create one of the most productive farming systems in the ancient world.',
+   icon:'🌽', color:'#b8621f'},
+  {group:'early', title:'Ancient China', sub:'Asia',
+   text:'Chinese scholars invented the magnetic compass and Zhang Heng\'s seismoscope, applying observation of magnetism and earth tremors to create instruments that measured and predicted natural forces.',
+   icon:'🧭', color:'#a2551a'},
+  {group:'early', title:'Ancient India', sub:'Asia',
+   text:'Indian mathematicians, including Aryabhata and later Brahmagupta, developed the concept of zero as a number and place-value decimal notation, laying the foundation for modern mathematics and astronomy.',
+   icon:'0️⃣', color:'#8f4a17'},
+  // Sections 5-8: Intellectual Revolutions
+  {group:'rev', title:'Copernican Revolution', sub:'Astronomy',
+   text:'Nicolaus Copernicus proposed a heliocentric model, showing that Earth and the planets orbit the sun rather than the sun orbiting Earth — overturning centuries of belief that humans were the fixed center of the universe.',
+   icon:'☀️', color:'#2f5f8a'},
+  {group:'rev', title:'Information Revolution', sub:'Technology',
+   text:'The rise of computers, the internet, and digital data transformed how knowledge is stored, processed, and shared, connecting people worldwide and making information instantly accessible.',
+   icon:'💻', color:'#28527a'},
+  {group:'rev', title:'Freudian Revolution', sub:'Psychology',
+   text:'Sigmund Freud introduced the idea of the unconscious mind, arguing that hidden drives and childhood experiences — not just conscious reason — shape human thought and behavior.',
+   icon:'🧠', color:'#20456a'},
+  {group:'rev', title:'Darwinian Revolution', sub:'Biology',
+   text:'Charles Darwin\'s theory of evolution by natural selection showed that species, including humans, change over time and share common ancestry, transforming how humanity understands its place in nature.',
+   icon:'🐒', color:'#183a5c'},
+];
+
+const svgNS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById('wheel');
+const n = data.length;
+const step = 360/n;
+
+function polar(r, angleDeg){
+  const a = (angleDeg-90) * Math.PI/180;
+  return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+}
+
+data.forEach((d,i)=>{
+  const startA = i*step, endA = (i+1)*step, midA = startA + step/2;
+  const [x1,y1] = polar(rOuter, startA);
+  const [x2,y2] = polar(rOuter, endA);
+  const [ix1,iy1] = polar(rInner, startA);
+  const [ix2,iy2] = polar(rInner, endA);
+  const largeArc = step > 180 ? 1 : 0;
+
+  const path = `M ${ix1} ${iy1} L ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${rInner} ${rInner} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
+
+  const g = document.createElementNS(svgNS,'g');
+  g.setAttribute('class','wedge');
+  g.setAttribute('data-idx', i);
+
+  const p = document.createElementNS(svgNS,'path');
+  p.setAttribute('d', path);
+  p.setAttribute('fill', d.color);
+  p.setAttribute('stroke', '#fbf6ec');
+  p.setAttribute('stroke-width','3');
+  g.appendChild(p);
+
+  const [lx,ly] = polar(rLabel, midA);
+  const label = document.createElementNS(svgNS,'text');
+  label.setAttribute('class','wedge-label');
+  label.setAttribute('x', lx);
+  label.setAttribute('y', ly);
+  label.setAttribute('text-anchor','middle');
+  // split title into lines
+  const words = d.title.split(' ');
+  words.forEach((w,wi)=>{
+    const tspan = document.createElementNS(svgNS,'tspan');
+    tspan.setAttribute('x', lx);
+    tspan.setAttribute('dy', wi===0? 0 : 16);
+    tspan.textContent = w;
+    label.appendChild(tspan);
+  });
+  g.appendChild(label);
+
+  const [icx,icy] = polar(rIcon, midA);
+  const icon = document.createElementNS(svgNS,'text');
+  icon.setAttribute('class','wedge-icon');
+  icon.setAttribute('x', icx);
+  icon.setAttribute('y', icy);
+  icon.textContent = d.icon;
+  g.appendChild(icon);
+
+  g.addEventListener('click', ()=> selectWedge(i, g));
+  svg.appendChild(g);
+});
+
+// hub
+const hub = document.createElementNS(svgNS,'circle');
+hub.setAttribute('class','hub');
+hub.setAttribute('cx',cx); hub.setAttribute('cy',cy); hub.setAttribute('r',rInner);
+svg.appendChild(hub);
+
+const hubIcon = document.createElementNS(svgNS,'text');
+hubIcon.setAttribute('class','hub-icon');
+hubIcon.setAttribute('x',cx); hubIcon.setAttribute('y',cy-28);
+hubIcon.textContent='💡';
+svg.appendChild(hubIcon);
+
+const hubLines = ["KNOWLEDGE","CHANGES HOW","HUMANS","UNDERSTAND","THE WORLD"];
+hubLines.forEach((line,i)=>{
+  const t = document.createElementNS(svgNS,'text');
+  t.setAttribute('class','hub-text');
+  t.setAttribute('x',cx);
+  t.setAttribute('y', cy - 2 + i*13);
+  t.textContent = line;
+  svg.appendChild(t);
+});
+
+const panel = document.getElementById('panel');
+let activeG = null;
+
+function selectWedge(i, g){
+  if(activeG) activeG.classList.remove('active');
+  g.classList.add('active');
+  activeG = g;
+  const d = data[i];
+  const kicker = d.group==='early' ? 'Cradle of Early Science — ' + d.sub : 'Intellectual Revolution — ' + d.sub;
+  panel.innerHTML = `
+    <span class="info-icon">${d.icon}</span>
+    <div class="kicker">${kicker}</div>
+    <h2>${d.title}</h2>
+    <p>${d.text}</p>
+  `;
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+</script>
+</body>
+</html>
